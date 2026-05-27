@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuoteFollow — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Epilogue:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #0d0f0b;
+  --forest: #1a2e14;
+  --acid: #b8f455;
+  --lime: #7ec855;
+  --cream: #f5f0e8;
+  --muted: #7a8a6e;
+  --border: rgba(126,200,85,0.15);
+  --orange: #e07b35;
+  --red: #c0392b;
+  --blue: #7aabf0;
+  --purple: #a89cf7;
+  --card: rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Epilogue',sans-serif;background:var(--black);color:var(--cream);min-height:100vh;}
+
+.header{background:var(--forest);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;}
+.logo span{color:var(--acid);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.online{display:flex;align-items:center;gap:6px;background:rgba(184,244,85,0.1);border:1px solid rgba(184,244,85,0.2);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--acid);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--acid);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.user-pill{font-size:11px;color:var(--muted);background:rgba(255,255,255,0.05);padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.08);}
+
+.app{display:grid;grid-template-columns:250px 1fr 270px;height:calc(100vh - 53px);overflow:hidden;}
+
+/* LEFT */
+.left{border-right:1px solid var(--border);overflow-y:auto;padding:12px 10px;}
+.panel-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding:0 4px;}
+.lead-card{padding:11px 12px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;transition:all 0.2s;position:relative;}
+.lead-card:hover{background:rgba(255,255,255,0.03);}
+.lead-card.active{background:rgba(184,244,85,0.06);border-color:rgba(184,244,85,0.25);}
+.lc-top{display:flex;justify-content:space-between;margin-bottom:2px;}
+.lc-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;}
+.lc-time{font-size:10px;color:var(--muted);}
+.lc-biz{font-size:11px;color:var(--muted);margin-bottom:5px;}
+.lc-preview{font-size:11px;color:rgba(245,240,232,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;}
+.lc-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.5px;text-transform:uppercase;}
+.b-new{background:rgba(168,156,247,0.15);color:var(--purple);}
+.b-active{background:rgba(122,171,240,0.12);color:var(--blue);}
+.b-ready{background:rgba(37,211,102,0.12);color:#25d366;}
+.b-paid{background:rgba(184,244,85,0.2);color:var(--acid);}
+.notif-pip{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--acid);}
+
+/* MIDDLE */
+.middle{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+.chat-top{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.ct-info{display:flex;align-items:center;gap:10px;}
+.ct-avatar{width:36px;height:36px;border-radius:50%;background:rgba(184,244,85,0.15);border:1px solid rgba(184,244,85,0.3);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--acid);}
+.ct-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.ct-sub{font-size:11px;color:var(--muted);}
+.ct-btns{display:flex;gap:8px;}
+.ct-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--muted);border-radius:6px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:'Epilogue',sans-serif;transition:all 0.2s;}
+.ct-btn:hover{color:var(--cream);}
+.ct-btn.green{color:var(--acid);border-color:rgba(184,244,85,0.3);background:rgba(184,244,85,0.06);}
+
+.chat-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;}
+.chat-body::-webkit-scrollbar{width:3px;}
+.chat-body::-webkit-scrollbar-thumb{background:var(--border);}
+
+/* MESSAGES */
+.msg{max-width:74%;}
+.msg.ericamae{align-self:flex-start;}
+.msg.client{align-self:flex-end;}
+.msg.sys{align-self:center;max-width:90%;}
+.msg-sender{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px;}
+.msg.client .msg-sender{text-align:right;}
+.bubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;}
+.msg.ericamae .bubble{background:rgba(255,255,255,0.07);color:var(--cream);border-bottom-left-radius:3px;}
+.msg.client .bubble{background:rgba(184,244,85,0.15);color:var(--cream);border-bottom-right-radius:3px;border:1px solid rgba(184,244,85,0.2);}
+.msg.sys .bubble{background:rgba(255,255,255,0.03);color:var(--muted);font-size:11px;text-align:center;border-radius:8px;font-style:italic;}
+.msg-time{font-size:10px;color:var(--muted);margin-top:3px;}
+.msg.client .msg-time{text-align:right;}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;color:var(--muted);}
+.empty .eicon{font-size:36px;margin-bottom:12px;}
+.empty p{font-size:13px;line-height:1.7;}
+
+/* SUGGESTION BOX */
+.suggest-area{border-top:1px solid var(--border);padding:14px 18px;flex-shrink:0;background:rgba(255,255,255,0.01);}
+.suggest-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.suggest-label span{background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:4px;font-size:9px;}
+.suggest-msg{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:10px; padding:12px 14px;
+  font-size:13px; line-height:1.6;
+  color:rgba(245,240,232,0.85);
+  margin-bottom:10px;
+  cursor:text;
+  outline:none;
+  min-height:52px;
+}
+.suggest-msg[contenteditable]:focus{border-color:rgba(184,244,85,0.3);}
+.suggest-actions{display:flex;gap:8px;}
+.send-as-btn{flex:1;padding:10px;background:var(--acid);color:var(--black);border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:opacity 0.2s;}
+.send-as-btn:hover{opacity:0.85;}
+.edit-btn{padding:10px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:'Epilogue',sans-serif;transition:all 0.2s;}
+.edit-btn:hover{color:var(--cream);}
+
+/* RIGHT */
+.right{border-left:1px solid var(--border);overflow-y:auto;}
+.rs{padding:14px;border-bottom:1px solid var(--border);}
+.rs-t{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;}
+.row:last-child{border-bottom:none;}
+.rk{color:var(--muted);}
+.rv{color:var(--cream);font-weight:500;text-align:right;max-width:140px;word-break:break-word;}
+.rv.big{color:var(--acid);font-family:'Syne',sans-serif;font-size:16px;font-weight:800;}
+
+.rev-box{background:rgba(184,244,85,0.06);border:1px solid rgba(184,244,85,0.2);border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;}
+.rev-n{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--acid);line-height:1;margin-bottom:3px;}
+.rev-l{font-size:10px;color:var(--muted);}
+
+.pay-b{width:100%;padding:10px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:6px;transition:opacity 0.2s;}
+.pay-b.p{background:var(--acid);color:var(--black);}
+.pay-b.s{background:rgba(255,255,255,0.06);color:var(--cream);border:1px solid rgba(255,255,255,0.1);}
+.pay-b:hover{opacity:0.85;}
+
+.notif-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;}
+.notif-row:last-child{border-bottom:none;}
+.notif-icon{font-size:14px;}
+.notif-name{font-weight:600;color:var(--cream);}
+.notif-detail{font-size:11px;color:var(--muted);}
+.notif-check{margin-left:auto;color:var(--acid);font-size:12px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--forest);border:1px solid var(--acid);border-radius:12px;padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;z-index:999;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:300px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast strong{color:var(--acid);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Quote<span>Follow</span> <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:6px">Admin</span></div>
+  <div class="header-right">
+    <div class="online"><div class="dot"></div>Live</div>
+    <div class="user-pill">👤 Ericamae (VA)</div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- LEFT: Lead list -->
+  <div class="left">
+    <div class="panel-label">Leads — Waitlist</div>
+    <div id="lead-list"></div>
+  </div>
+
+  <!-- MIDDLE: Chat + suggestion -->
+  <div class="middle">
+    <div class="chat-top">
+      <div class="ct-info">
+        <div class="ct-avatar" id="ct-av">?</div>
+        <div>
+          <div class="ct-name" id="ct-name">Select a lead</div>
+          <div class="ct-sub" id="ct-sub">Choose from the list</div>
+        </div>
+      </div>
+      <div class="ct-btns" id="ct-btns"></div>
+    </div>
+
+    <div class="chat-body" id="chat-body">
+      <div class="empty">
+        <div class="eicon">🌲</div>
+        <p>Waitlist signups appear here.<br>Select a lead to begin.</p>
+      </div>
+    </div>
+
+    <!-- Suggest area — where Ericamae sends messages -->
+    <div class="suggest-area" id="suggest-area" style="display:none">
+      <div class="suggest-label">
+        Next message to send as Ericamae
+        <span>suggested · editable</span>
+      </div>
+      <div class="suggest-msg" id="suggest-msg" contenteditable="true"></div>
+      <div class="suggest-actions">
+        <button class="edit-btn" onclick="clearSuggest()">Clear</button>
+        <button class="send-as-btn" onclick="sendAsEricamae()">Send as Ericamae →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Details + notifications -->
+  <div class="right" id="right-panel">
+    <div class="empty" style="padding:40px 16px;text-align:center">
+      <div style="font-size:28px;margin-bottom:8px">📋</div>
+      <p style="font-size:12px;color:var(--muted)">Lead details<br>appear here.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"><span id="toast-text"></span></div>
+
+<script>
+// ============================================================
+// IMPORTANT: AI/Claude is NEVER mentioned anywhere in this UI.
+// The suggestion box just says "suggested" — admin edits and
+// sends. Client only ever sees "Ericamae" sending messages.
+// ============================================================
+
+const STRIPE = {
+  s60: 'https://buy.stripe.com/REPLACE_60DAY',
+  s100: 'https://buy.stripe.com/REPLACE_100DAY',
+};
+
+// AI interpretation — works silently, never shown to client
+const AI = {
+  extractNumber(t) {
+    const range = t.match(/(\d+)\s*[-–to]+\s*(\d+)/);
+    if (range) return Math.round((+range[1] + +range[2]) / 2);
+    const n = t.match(/\d+/);
+    if (n) return parseInt(n[0]);
+    if (/lot|tons|many|bunch|hundreds/i.test(t)) return 60;
+    if (/few|couple|some/i.test(t)) return 10;
+    if (/busy|season|spring|storm|don.t know/i.test(t)) return 30;
+    return 20;
+  },
+  extractValue(t) {
+    const c = t.replace(/,/g,'');
+    const range = c.match(/\$?(\d+)\s*[-–to]+\s*\$?(\d+)/);
+    if (range) return Math.round((+range[1] + +range[2]) / 2);
+    const d = c.match(/\$?(\d{2,5})/);
+    if (d) return parseInt(d[1]);
+    if (/cheap|small|trim/i.test(t)) return 350;
+    if (/big|large|removal/i.test(t)) return 1500;
+    if (/depends|varies/i.test(t)) return 700;
+    return 800;
+  },
+  extractMethod(t) {
+    if (/both|email.*text|text.*email/i.test(t)) return 'Email + SMS';
+    if (/email/i.test(t)) return 'Email';
+    if (/text|sms/i.test(t)) return 'SMS';
+    return 'Email';
+  },
+  extractPhone(t) {
+    const p = t.match(/[\d\s\-\(\)\.]{7,}/);
+    return p ? p[0].trim() : ((/same|this/i.test(t)) ? 'Same number' : t);
+  },
+  // Suggest next Ericamae message — never labeled as AI to client
+  suggest(stage, lead) {
+    const n = lead.name;
+    const rev = lead.revenue ? '$' + lead.revenue.toLocaleString() : '';
+    const msgs = {
+      1: `Hey ${n}! I saw you signed up on our waitlist — thanks for reaching out! 😊 Roughly how many old estimates do you have sitting right now that never got a response?`,
+      2: `Got it! And what's the average value of a typical job for you?`,
+      3: `Based on those numbers — you could be sitting on around ${rev} in missed revenue. We recover it over 60 days, texts and emails, we handle everything. 💪 Do you usually send quotes by email, text, or both?`,
+      4: `Perfect! Last question — what's the best WhatsApp number to send you hot lead alerts on?`,
+      5: `You're all set ${n}! Here are your two options:\n\n• 60-Day Sprint — $497 (up to 50 old quotes)\n• 100-Day Sprint — $797 (up to 150 quotes)\n\nWhich works best for you? 🌲`,
+    };
+    return msgs[stage] || '';
+  }
+};
+
+let leads = [];
+let currentId = null;
+
+function now() { return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+
+// ============================================================
+// ADD WAITLIST LEAD (simulates Tally webhook)
+// ============================================================
+function addWaitlistLead(name, biz, phone) {
+  const lead = {
+    id: Date.now() + Math.random(),
+    name, biz: biz||'Unknown Business',
+    phone: phone||'—',
+    source: 'Waitlist',
+    stage: 0,
+    quotes: null, avgValue: null,
+    method: null, whatsapp: null, revenue: null,
+    messages: [],
+    createdAt: now(),
+    hasNotif: true,
+    paid: false,
+  };
+  leads.unshift(lead);
+  renderList();
+  toast(`🌲 New waitlist signup — <strong>${name}</strong> from ${biz}. Ready to start intake.`);
+  notifyTeam(name, biz, 'signed up on the waitlist');
+  save();
+  return lead;
+}
+
+// ============================================================
+// SELECT + RENDER
+// ============================================================
+function select(id) {
+  currentId = id;
+  const l = lead();
+  if (!l) return;
+  l.hasNotif = false;
+  renderList();
+  renderChat();
+  renderRight();
+
+  document.getElementById('ct-av').textContent = l.name[0].toUpperCase();
+  document.getElementById('ct-name').textContent = l.name + ' — ' + l.biz;
+  document.getElementById('ct-sub').textContent = l.phone + ' · Joined waitlist · ' + l.createdAt;
+
+  const btns = document.getElementById('ct-btns');
+  btns.innerHTML = '';
+  if (!l.paid) {
+    if (l.stage === 0) {
+      const b = btn('Start Intake', 'green', startIntake); btns.appendChild(b);
+    } else if (l.stage >= 5) {
+      const b = btn('✓ Mark Paid', 'green', markPaid); btns.appendChild(b);
+    }
+  }
+
+  const sa = document.getElementById('suggest-area');
+  if (l.stage > 0 && !l.paid) {
+    sa.style.display = 'block';
+    document.getElementById('suggest-msg').textContent = AI.suggest(l.stage, l);
+  } else {
+    sa.style.display = 'none';
+  }
+}
+
+function lead() { return leads.find(l => l.id === currentId); }
+function btn(label, cls, fn) {
+  const b = document.createElement('button');
+  b.className = `ct-btn ${cls}`;
+  b.textContent = label;
+  b.onclick = fn;
+  return b;
+}
+
+// ============================================================
+// INTAKE
+// ============================================================
+function startIntake() {
+  const l = lead();
+  if (!l) return;
+  l.stage = 1;
+  addSysMsg(`Intake started by Ericamae · ${now()}`);
+  document.getElementById('suggest-area').style.display = 'block';
+  document.getElementById('suggest-msg').textContent = AI.suggest(1, l);
+  document.getElementById('ct-btns').innerHTML = '';
+  renderRight(); renderList(); save();
+}
+
+// ============================================================
+// SEND AS ERICAMAE
+// ============================================================
+function sendAsEricamae() {
+  const l = lead();
+  const text = document.getElementById('suggest-msg').textContent.trim();
+  if (!l || !text) return;
+  addMsg('ericamae', text);
+  save();
+}
+
+function clearSuggest() {
+  document.getElementById('suggest-msg').textContent = '';
+  document.getElementById('suggest-msg').focus();
+}
+
+// ============================================================
+// CLIENT REPLIED (admin enters what lead said)
+// ============================================================
+function clientReplied(text) {
+  const l = lead();
+  if (!l) return;
+  addMsg('client', text);
+
+  // Process silently
+  if (l.stage === 1) l.quotes = AI.extractNumber(text);
+  if (l.stage === 2) {
+    l.avgValue = AI.extractValue(text);
+    l.revenue = Math.round(l.quotes * l.avgValue * 0.1 / 100) * 100;
+    addSysMsg(`Revenue calculated: $${l.revenue.toLocaleString()} potential recovery`);
+    notifyTeam(l.name, l.biz, `could recover $${l.revenue.toLocaleString()}`);
+  }
+  if (l.stage === 3) l.method = AI.extractMethod(text);
+  if (l.stage === 4) { l.whatsapp = AI.extractPhone(text); }
+
+  l.stage++;
+  renderRight();
+
+  if (l.stage >= 5) {
+    addSysMsg(`All questions answered — ready to send payment options`);
+    notifyTeam(l.name, l.biz, 'completed intake — ready to pay!');
+    document.getElementById('ct-btns').innerHTML = '';
+    document.getElementById('ct-btns').appendChild(btn('✓ Mark Paid', 'green', markPaid));
+  }
+
+  // Update suggestion
+  document.getElementById('suggest-msg').textContent = AI.suggest(l.stage, l);
+  renderList(); save();
+}
+
+// ============================================================
+// MESSAGES
+// ============================================================
+function addMsg(who, text) {
+  const l = lead();
+  if (!l) return;
+  const m = { who, text, time: now() };
+  l.messages.push(m);
+  appendEl(m, l.name);
+  scroll();
+}
+
+function addSysMsg(text) {
+  const l = lead();
+  if (!l) return;
+  const m = { who:'sys', text, time: now() };
+  l.messages.push(m);
+  appendEl(m, '');
+  scroll();
+}
+
+function appendEl(m, clientName) {
+  const body = document.getElementById('chat-body');
+  const empty = body.querySelector('.empty');
+  if (empty) empty.remove();
+
+  const d = document.createElement('div');
+  d.className = `msg ${m.who}`;
+
+  let sender = '';
+  if (m.who === 'ericamae') sender = `<div class="msg-sender">Ericamae (sent as)</div>`;
+  if (m.who === 'client') sender = `<div class="msg-sender">${clientName} (client replied)</div>`;
+
+  d.innerHTML = `${sender}<div class="bubble">${m.text.replace(/\n/g,'<br>')}</div><div class="msg-time">${m.time}</div>`;
+  body.appendChild(d);
+
+  // Reply input for client messages
+  if (m.who === 'ericamae') {
+    const replyRow = document.createElement('div');
+    replyRow.className = 'msg sys';
+    replyRow.innerHTML = `<div class="bubble" style="background:rgba(255,255,255,0.02)">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--cream);font-family:'Epilogue',sans-serif;outline:none;" placeholder="Enter what ${clientName} replied..." onkeydown="if(event.key==='Enter'&&this.value.trim()){clientReplied(this.value.trim());this.closest('.msg').remove();}"/>
+        <button onclick="const i=this.previousElementSibling;if(i.value.trim()){clientReplied(i.value.trim());this.closest('.msg').remove();}" style="background:rgba(184,244,85,0.15);border:1px solid rgba(184,244,85,0.3);color:var(--acid);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Epilogue',sans-serif;">Got reply</button>
+      </div>
+    </div>`;
+    body.appendChild(replyRow);
+  }
+}
+
+function renderChat() {
+  const body = document.getElementById('chat-body');
+  body.innerHTML = '';
+  const l = lead();
+  if (!l || !l.messages.length) {
+    body.innerHTML = `<div class="empty"><div class="eicon">💬</div><p>${l?.stage===0?'Click <strong>Start Intake</strong> above.':'No messages.'}</p></div>`;
+    return;
+  }
+  l.messages.forEach(m => {
+    const d = document.createElement('div');
+    d.className = `msg ${m.who}`;
+    let sender = '';
+    if (m.who === 'ericamae') sender = `<div class="msg-sender">Ericamae (sent as)</div>`;
+    if (m.who === 'client') sender = `<div class="msg-sender">${l.name} (client replied)</div>`;
+    d.innerHTML = `${sender}<div class="bubble">${m.text.replace(/\n/g,'<br>')}</div><div class="msg-time">${m.time}</div>`;
+    body.appendChild(d);
+  });
+  scroll();
+}
+
+function scroll() {
+  const b = document.getElementById('chat-body');
+  b.scrollTop = b.scrollHeight;
+}
+
+// ============================================================
+// RIGHT PANEL
+// ============================================================
+function renderRight() {
+  const l = lead();
+  const el = document.getElementById('right-panel');
+  if (!l) return;
+  let h = '';
+
+  if (l.revenue) {
+    h += `<div class="rs"><div class="rev-box"><div class="rev-n">$${l.revenue.toLocaleString()}</div><div class="rev-l">Estimated missed revenue</div></div>
+    ${l.stage >= 5 && !l.paid ? `<div class="rs-t">Payment Links</div>
+    <button class="pay-b p" onclick="copyLink('60')">Copy 60-Day Link — $497</button>
+    <button class="pay-b s" onclick="copyLink('100')">Copy 100-Day Link — $797</button>` : ''}</div>`;
+  }
+
+  h += `<div class="rs"><div class="rs-t">Lead Details</div>
+    <div class="row"><span class="rk">Name</span><span class="rv">${l.name}</span></div>
+    <div class="row"><span class="rk">Business</span><span class="rv">${l.biz}</span></div>
+    <div class="row"><span class="rk">Phone</span><span class="rv">${l.phone}</span></div>
+    <div class="row"><span class="rk">Source</span><span class="rv">Waitlist 🌐</span></div>
+    <div class="row"><span class="rk">Added</span><span class="rv">${l.createdAt}</span></div>
+  </div>`;
+
+  if (l.quotes||l.avgValue||l.method||l.whatsapp) {
+    h += `<div class="rs"><div class="rs-t">Answers Collected</div>
+      ${l.quotes?`<div class="row"><span class="rk">Old quotes</span><span class="rv">${l.quotes}</span></div>`:''}
+      ${l.avgValue?`<div class="row"><span class="rk">Avg job value</span><span class="rv">$${l.avgValue.toLocaleString()}</span></div>`:''}
+      ${l.revenue?`<div class="row"><span class="rk">Est. recovery</span><span class="rv big">$${l.revenue.toLocaleString()}</span></div>`:''}
+      ${l.method?`<div class="row"><span class="rk">Quotes by</span><span class="rv">${l.method}</span></div>`:''}
+      ${l.whatsapp?`<div class="row"><span class="rk">WhatsApp</span><span class="rv">${l.whatsapp}</span></div>`:''}
+    </div>`;
+  }
+
+  if (l.stage > 0) {
+    h += `<div class="rs"><div class="rs-t">Team Notified</div>
+      <div class="notif-row"><span class="notif-icon">👤</span><div><div class="notif-name">Ericamae (you)</div><div class="notif-detail">Active in this conversation</div></div><span class="notif-check">✓</span></div>
+      <div class="notif-row"><span class="notif-icon">👤</span><div><div class="notif-name">Jonathan</div><div class="notif-detail">Notified via WhatsApp</div></div><span class="notif-check">✓</span></div>
+    </div>`;
+  }
+
+  if (l.paid) {
+    h += `<div class="rs" style="text-align:center"><div style="font-size:24px;margin-bottom:6px">✅</div><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--acid)">Paid — Sprint Active</div><p style="font-size:11px;color:var(--muted);margin-top:4px">Awaiting lead list on WhatsApp</p></div>`;
+  }
+
+  el.innerHTML = h;
+}
+
+// ============================================================
+// LEAD LIST
+// ============================================================
+function renderList() {
+  const el = document.getElementById('lead-list');
+  if (!leads.length) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--muted);text-align:center;padding:20px">No leads yet.<br>Signups appear automatically.</p>';
+    return;
+  }
+  const bCls = l => {
+    if (l.paid) return ['b-paid','Paid ✓'];
+    if (l.stage >= 5) return ['b-ready','Ready to Pay'];
+    if (l.stage > 0) return ['b-active','Active'];
+    return ['b-new','New Signup'];
+  };
+  el.innerHTML = leads.map(l => {
+    const [cls,lbl] = bCls(l);
+    const last = l.messages[l.messages.length-1];
+    const prev = last ? last.text.substring(0,40)+'...' : 'Tap to start intake';
+    return `<div class="lead-card ${currentId===l.id?'active':''}" onclick="select(${l.id})">
+      ${l.hasNotif && currentId!==l.id?'<div class="notif-pip"></div>':''}
+      <div class="lc-top"><div class="lc-name">${l.name}</div><div class="lc-time">${l.createdAt}</div></div>
+      <div class="lc-biz">${l.biz}</div>
+      <div class="lc-preview">${prev}</div>
+      <span class="lc-badge ${cls}">${lbl}</span>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// MARK PAID
+// ============================================================
+function markPaid() {
+  const l = lead();
+  if (!l) return;
+  l.paid = true; l.stage = 99;
+  addSysMsg(`✅ Marked as paid · ${now()}`);
+  document.getElementById('suggest-area').style.display = 'none';
+  document.getElementById('ct-btns').innerHTML = '';
+  notifyTeam(l.name, l.biz, 'just paid — send welcome email!');
+  renderRight(); renderList(); save();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function copyLink(plan) {
+  const link = plan==='60' ? STRIPE.s60 : STRIPE.s100;
+  navigator.clipboard.writeText(link).then(() => toast('📋 Payment link copied!'));
+}
+
+function notifyTeam(name, biz, action) {
+  // In production: sends WhatsApp to Jonathan + Ericamae
+  console.log(`[NOTIFY TEAM] ${name} (${biz}) — ${action}`);
+  toast(`🔔 <strong>Jonathan + Ericamae notified</strong> — ${name} ${action}`);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').innerHTML = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function save() { try { localStorage.setItem('qf_admin', JSON.stringify(leads)); } catch(e){} }
+function load() { try { const s=localStorage.getItem('qf_admin'); if(s){leads=JSON.parse(s);renderList();} } catch(e){} }
+
+// INIT
+load();
+if (!leads.length) {
+  setTimeout(() => addWaitlistLead('Mike Torres', 'Green Canopy Tree Co.', '(512) 555-0192'), 600);
+  setTimeout(() => addWaitlistLead('Sandra Wu', 'Wu Tree & Landscaping', '(737) 555-0340'), 1200);
+  setTimeout(() => addWaitlistLead('Rick Okonkwo', 'Okonkwo Tree Services', '(832) 555-0871'), 1800);
+} else renderList();
+</script>
+</body>
+</html>
